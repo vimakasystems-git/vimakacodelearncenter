@@ -1,8 +1,8 @@
 # Contributing
 
 1. Open an issue describing a lesson, bug or accessibility improvement.
-2. Make a focused branch and keep the application runnable as static files.
-3. Verify syntax with `node --check dist/app.js` and `node --check dist/cloud.js`.
+2. Make a focused branch and keep the frontend and Worker API runnable without npm dependencies.
+3. Verify syntax with `npm test`, `npm run build`, and source syntax checks under `public/`.
 4. Check the affected user flow in a browser, including narrow layouts and keyboard use.
 5. Explain the change and validation in a pull request.
 

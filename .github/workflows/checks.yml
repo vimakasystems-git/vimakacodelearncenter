@@ -3,12 +3,17 @@ on: [push, pull_request]
 permissions:
   contents: read
 jobs:
-  syntax:
+  verify:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-      - run: node --check dist/app.js
-      - run: node --check dist/cloud.js
+      - run: node --check public/app.js
+      - run: node --check public/runner.js
+      - run: node --check public/interview.js
+      - run: node --check public/cloud.js
+      - run: npm test
+      - run: npm run build
+      - run: node --check dist/server/index.js

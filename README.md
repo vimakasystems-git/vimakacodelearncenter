@@ -1,60 +1,62 @@
-# Vimaka Code Academy / CodePath
+# Vimaka Code Learn Center
 
-A free, open-source learning center for Python, Go, JavaScript and Java, by Vimaka Sistemas Inteligentes.
+Free, MIT-licensed education for Python, Go, JavaScript and Java, by Vimaka Sistemas Inteligentes.
 
-## Included
+## Features
 
-- Responsive learning dashboard and an IDE-style editor with code export.
-- 24 explained source examples and 24 exercise prompts.
-- Python execution with Pyodide and JavaScript execution in browser Web Workers.
-- External playground links and manual output checks for Go and Java.
-- Output-based reviews, basic style hints, lesson ratings, local progress, XP and badges.
-- Six professional project roadmaps: data, web, cloud, enterprise, health technology and finance.
-- AWS, Microsoft Azure, Google Cloud and Oracle Cloud architecture models with Python starter templates, requirements exports, documentation and pattern-based exercises.
-- Public GitHub repository lookup and a manual code export/upload workflow.
+- 24 explained examples and 24 practice prompts, exercise output checks, personal ratings, XP and badges.
+- Browser IDE with standard input, terminal output, runtime errors, cancellation and source export.
+- Python using Pyodide 0.27.7 in a dedicated browser worker; JavaScript supports top-level await in a fresh worker.
+- Go 1.22.8 and Java 22 compile through a server-side Wandbox adapter. Python has an optional Wandbox fallback.
+- Shared interview rooms: company and candidate invitation links, candidate-owned code, shared stdin/output, two-way chat, presence, suggested timer, session export and company-controlled ending.
+- Six career roadmaps and AWS, Azure, Google Cloud and Oracle Cloud models with editable Python templates.
+- Public GitHub repository lookup and source export.
 
-## Run locally
+## Development
 
-Requires Python 3 for the static development server; no build step or npm dependencies.
+Requires Node.js 24+. There are no npm dependencies.
 
 ```sh
-python3 -m http.server 8080 --directory dist
+npm run dev
 ```
 
-Open http://localhost:8080. The source is in `dist/` and can be hosted by any static host. Python runtime loading, Google Fonts and GitHub repository lookup require internet access. Pyodide is pinned to 0.27.7 from jsDelivr.
+Open http://localhost:4173. Development uses a file-backed local storage adapter under ignored `.sites-runtime/`. It is not a production database. Run on localhost or behind HTTPS to use the clipboard and browser workers.
 
-## Project files
+```sh
+npm test
+npm run build
+```
 
-- `dist/index.html`: application shell
-- `dist/style.css`: responsive styles
-- `dist/app.js`: language content, editor, workers, reviews and local persistence
-- `dist/cloud.js`: cloud models, templates and exercises
+Source assets are in `public/`, the HTTP API in `worker/index.js`, and tests in `tests/`. The deterministic build embeds assets into `dist/server/index.js`, a Cloudflare Worker ES module. `dist/` is generated and not edited directly.
+
+## Deployment
+
+Deploy `dist/server/index.js` as a Cloudflare Worker with an R2 bucket binding named `BUCKET`. `wrangler.example.json` is a sample configuration; replace the bucket name with your own. The app needs no provider credentials for its current compiler adapter. Do not commit cloud credentials or API tokens.
+
+The ChatGPT Sites deployment uses its own `.openai/hosting.json` and preserves its existing access policy. Both company and candidate must have permission to visit the hosted site as well as a valid room invitation. A private site cannot be accessed by an external candidate merely by copying an interview link.
+
+## Execution behavior
+
+Dedicated same-origin worker files replace blob-generated workers. The worker response permits Pyodide's runtime compilation while the document does not allow eval. Stdout is joined with real newline characters. Python supports line-based input through the stdin panel; JavaScript receives stdin as a string. Empty stdin returns end-of-input.
+
+Local Python downloads its runtime from jsDelivr on first run. A slow or blocked network produces a visible error; the optional cloud fallback sends code and stdin to Wandbox. Java and Go always use Wandbox when Run is clicked. Source is not intentionally saved by our adapter (`save: false`), but external processing is still subject to Wandbox's policies and availability. Do not submit confidential code. Remote compilation can take up to 90 seconds; Stop cancels the local request and cannot guarantee cancellation of an already submitted remote job.
+
+Wandbox compiles Java as `prog.java`. The adapter removes the public modifier from top-level class declarations so single-file examples using `public class Main` compile; source exports keep the original text. Multi-file projects and Java package layouts are not supported.
+
+Output checks compare a single expected stdout after successful execution. Style hints and cloud template checks are basic heuristics, not an AI review or proof of algorithmic correctness. Career journeys are project roadmaps; this release is not a complete professional certification course.
+
+## Interview sessions and privacy
+
+Company creates a room; the candidate can edit and run code, both roles can chat, and only the company can end it. The company has a read-only solution view. Updates poll about every two seconds. Revision checks and R2 ETag compare-and-swap prevent stale writes; unsaved candidate drafts are preserved in sessionStorage. This is a single-writer interview editor, not a simultaneous multi-author CRDT editor.
+
+Invitation tokens are random bearer capabilities, carried in URL fragments and hashed before storage. Anyone with the company link has company access; anyone with the candidate link has candidate access. Keep them separate and private. Room access expires 24 hours after creation. Records remain in the R2 bucket until deleted by your storage retention policy; configure a lifecycle rule for the `interviews/` prefix if deploying independently. There is no recording, automated hiring score, or identity verification. Export includes the room's challenge, code, output and shared conversation, not invitation tokens.
+
+Progress/ratings are localStorage-only and not account-synced. Interview invitations and unsaved drafts use sessionStorage. GitHub lookup is public-only; OAuth, automatic commits and private repository reads are not included.
 
 ## Verification
 
-```sh
-node --check dist/app.js
-node --check dist/cloud.js
-```
+Tests cover two roles sharing code/chat, invalid tokens, company/candidate permissions, stale revisions, session expiry and cross-origin write rejection. Browser QA covers local Python input/multiline output, async JavaScript and a company/candidate session with synchronized edits, chat and output. Provider compilers depend on external service availability.
 
-Browser checks performed: Python example execution, JavaScript solution output check and XP award, public GitHub repository retrieval and career roadmap navigation. Cloud templates are illustrative, not deployed or integration-tested.
+## Contributing and license
 
-## Honest scope
-
-This release is a foundation curriculum with introductory intermediate/advanced concepts, not a complete professional certification course. Professional journeys are project roadmaps. There is no backend, account sync, AI reviewer or shared leaderboard. Go/Java use manual external checks and cannot earn verified XP yet; badges requiring those languages stay locked. Output checks use one expected output and do not prove algorithmic correctness. Cloud exercise reviews check text patterns only.
-
-Progress and personal ratings are stored in browser localStorage. Browser workers terminate after 30 seconds. JavaScript execution is intended for learner-authored code, not a hardened service for running hostile code. Do not add authenticated backend APIs without reviewing execution isolation.
-
-GitHub lookup reads public repositories using the unauthenticated API and is subject to rate limits. OAuth, private repository reads, automatic commits and account linking are not implemented. Never put GitHub tokens or cloud credentials in the frontend.
-
-Cloud learning is free; external cloud resources may incur provider charges. Templates do not provision resources. Follow each provider's official runtime and authentication documentation before deployment.
-
-## Contributing
-
-Read CONTRIBUTING.md. Contributions to lesson coverage, accessibility, test cases and isolated language runtimes are welcome.
-
-## License
-
-MIT. Copyright (c) 2026 Vimaka Sistemas Inteligentes.
-
-Third-party runtimes, fonts and providers retain their own licenses and trademarks. This project is not affiliated with or endorsed by the cloud providers.
+See [CONTRIBUTING.md](CONTRIBUTING.md). Licensed under [MIT](LICENSE), copyright 2026 Vimaka Sistemas Inteligentes. Third-party runtimes, fonts and cloud providers retain their licenses and trademarks.
